@@ -9,16 +9,18 @@ var serverKeyPair= ursaED.loadServerKey('./key/serverKey.pem');
 
 console.log(pubKey);
 /*
-account.register('fyf','fyf','Linux Mint',pubKey,keyPair,serverKeyPair,function(msg){
+account.register('fang','fyf','Linux Mint',pubKey,keyPair,serverKeyPair,function(msg){
   console.log(JSON.stringify(msg));
 });
 */
+for(var i=0;i<500;i++){
 
-account.login('fyf','fyf','Linux CDOS',pubKey,keyPair,serverKeyPair,function(msg){
+console.log(i+':-------------------------------------')/*
+account.login('fyf','fyf','Linux Ubuntu',pubKey,keyPair,serverKeyPair,function(msg){
   console.log(JSON.stringify(msg));
-});
-/*
-
-account.getPubKeysByName('fyf','Linux CDOS','text',keyPair,serverKeyPair,function(msg){
-    console.log(JSON.stringify(msg));
 });*/
+account.getPubKeysByName('fyf','Linux CDOS','fyf',keyPair,serverKeyPair,function(msg){
+    console.log(JSON.stringify(msg));
+});
+console.log('--------------------------')
+}

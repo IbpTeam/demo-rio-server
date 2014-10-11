@@ -1,5 +1,4 @@
-var userDAO=require('./UserDAO');
-var serverSqlHandler =require('./serverSqlHandler');
+var DBDao=require('./DBDao');
 var ursa = require('./newUrsa');
 
 exports.processGetMsg=function(rstObj,msgObj,processGetMsgCallback){
@@ -7,23 +6,23 @@ exports.processGetMsg=function(rstObj,msgObj,processGetMsgCallback){
   switch(msgObj.option){			  
     case 0x0100: {	    
       console.log('0x0100');
-      serverSqlHandler.getPubKeyByUserName(dataObj.userName,function(userName,err,rstPubKey){
+      DBDao.getPubKeyByUserName(dataObj.userName,function(err,rstPubKey){
 	console.log('getUserByUserName 0100');	    
 	if(err){
 	  rstObj['type']='error';	         
-	  rstObj['msg']='getUserByUserName:'+err;
+	  rstObj['msg']='getUserByUserName:'+rstPubKey;
 	  processGetMsgCallback(rstObj);		  
 	}else{ 	
 	  rstObj['type']='result';
 	  if(rstPubKey.length==0){	              
-	    rstObj['state']=0;	       
+	    rstObj['state']=0;	  
 	    rstObj['msg']='no such a person';	      
 	    processGetMsgCallback(rstObj);	    	  
 	  }else{	 	
 	    rstObj['state']=1;	      
 	    rstObj['msg']='details';	      
 	    var data={};	      
-	    data['userName']=userName;	      
+	    data['userName']=dataObj.userName;	      
 	    var detail=[];	      
 	    data['detail']=detail;	      
 	    rstObj['data']=data;	      
@@ -65,14 +64,14 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
   //var keyPair=ursa.createKey(dataObj.pubKey);
   switch(msgObj.option){			  
     case 0x0001: {				//登录	  				  
-      serverSqlHandler.authUser(dataObj.userName,dataObj.password,function(err,rst){
+      DBDao.authUser(dataObj.userName,dataObj.password,function(err,rst){
 	console.log('authUser');	
 	if(err){
 	  rstObj['type']='error';	         
-	  rstObj['msg']=err;
+	  rstObj['msg']=rst;
 	  processSetMsgCallback(rstObj);
 	}else{ 
-	  if(rst==null){					      
+	  if(rst.length==0){					      
 	    console.log('none');	
 	    rstObj['type']='result';	
 	    rstObj['state']=0;	
@@ -80,23 +79,23 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
 	    console.log('nodenonde:'+JSON.stringify(rstObj));		
 	    processSetMsgCallback(rstObj);
 	  }else{	     
-	    serverSqlHandler.getPubKeyByNameDevice(dataObj.userName,msgObj.UUID,function(userName,err,rst){
+	    DBDao.getPubKeyByNameDevice(dataObj.userName,msgObj.UUID,function(err,rst){
 	      if(err){
 		rstObj['type']='error';	         
-		rstObj['msg']=err;
+		rstObj['msg']=rst;
 		processSetMsgCallback(rstObj);
 	      }else{
-		if(rst==null){
+		if(rst.length==0){
 		  if(dataObj.pubKey==null){
 		    rstObj['type']='error';	         
 		    rstObj['msg']='no new pubKey provided!';
 		    processSetMsgCallback(rstObj);
 		    return;
 		  }
-		  serverSqlHandler.createPubKey(dataObj.userName,msgObj.UUID,dataObj.pubKey,function(err){    
+		  DBDao.createPubKey(dataObj.userName,msgObj.UUID,dataObj.pubKey,function(err,rst){    
 		    if(err){      
 		      rstObj['type']='error';	         
-		      rstObj['msg']=err;
+		      rstObj['msg']=rst;
 		      //processGetMsgCallback(rstObj);	        
 		    }else{
 			console.log('createPubKey ok');
@@ -111,16 +110,16 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
 		      processSetMsgCallback(rstObj);
 		    });
 		}else{ 
-		  if(dataObj.pubKey==null||dataObj.pubKey==rst.pubKey){
+		  if(dataObj.pubKey==null||dataObj.pubKey==rst[0].pubKey){
 		    rstObj['type']='result';			  
 		    rstObj['state']=1;			  
 		    rstObj['msg']='auth succeed';
 		    processSetMsgCallback(rstObj);
-		  }else{  
-		    serverSqlHandler.updatePubKey(dataObj.userName,msgObj.UUID,dataObj.pubKey,function(err){    
+		  }else{ 
+		    DBDao.updatePubKey(dataObj.userName,msgObj.UUID,dataObj.pubKey,function(err,rst){    
 		      if(err){      		
 			rstObj['type']='error';	         
-			rstObj['msg']=err;	        
+			rstObj['msg']=rst;	        
 		      }else{			  
 			console.log('updatePubKey ok');
 			  //var errorMsg={}			  
@@ -143,26 +142,26 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
     break;
 				  
     case 0x0000: {//注册
-      serverSqlHandler.getUserByUserName(dataObj.userName,function(userName,err,rst){	
+      DBDao.getUserByUserName(dataObj.userName,function(err,rst){	
 	if(err){	  
 	  rstObj['type']='error';	         	
-	  rstObj['msg']=err;
+	  rstObj['msg']=rst;
 	  processSetMsgCallback(rstObj);
 	}else{	  	
-	  if(rst==null){				   	  
+	  if(rst.length==0){				   	  
 	    console.log('none');				       	  
-	    serverSqlHandler.saveUser(dataObj,function(err){					 
+	    DBDao.saveUser(dataObj,function(err,rst){					 
 	      console.log('saveUser');						 
 	      if(err){
 		rstObj['type']='error';
-		rstObj['msg']=err;
+		rstObj['msg']=rst;
 		processSetMsgCallback(rstObj);
 	      }else{		
-		serverSqlHandler.createPubKey(dataObj.userName,msgObj.UUID,dataObj.pubKey,function(err){    		
+		DBDao.createPubKey(dataObj.userName,msgObj.UUID,dataObj.pubKey,function(err,rst){    		
 		  if(err){      		      
 		    rstObj['type']='error';	           
-		    rstObj['msg']=err;
-		    serverSqlHandler.deleteUser(dataObj.userName,function(err){
+		    rstObj['msg']=rst;
+		    DBDao.deleteUser(dataObj.userName,function(err,rst){
 		      if(err){           
 			rstObj['msg']+='  '+err;
 		      }

@@ -3,28 +3,11 @@ var ursa = require('./newUrsa');
 var ursaED = require('./ursaED');
 var clientPackHandler = require('./clientPackHandler');
 
-//account server information loaded from config file
-var PORT=8892;
-var IP='127.0.0.1';
+var PORT=8893;
+var IP='127.0.0.1';//'192.168.160.66';
 var keySizeBits = 1024;
-var TIMEOUT=2000;
+var TIMEOUT=10000;
 
-/*
-* @method register
-*  用户注册新账户
-* @param userName
-*  待注册的用户名
-* @param password
-*  待注册的用户密码，用MD5加密
-* @param UUID
-*  客户端操作系统的唯一标识符
-* @param pubKey
-*  待提交的本机用户公钥
-* @param serverKeyPair
-*  帐号公钥服务器的KeyPair，由操作系统预置
-* @param rigisterResultCb
-*  注册回调函数，用来检测该注册是否成功
-*/
 function register(userName,password,UUID,pubKey,keyPair,serverKeyPair,rigisterResultCb){
   var client = connectClient();
   clientPackHandler.register(userName,password,UUID,pubKey,function(msg){
@@ -36,6 +19,7 @@ function register(userName,password,UUID,pubKey,keyPair,serverKeyPair,rigisterRe
 exports.register = register;
 
 function login(userName,password,UUID,pubKey,keyPair,serverKeyPair,loginResultCb){
+  console.log(userName+'----login');
   var client = connectClient();
   clientPackHandler.login(userName,password,UUID,pubKey,function(msg){
     sendMsg(client,msg,serverKeyPair);
@@ -67,8 +51,7 @@ function connectClient(){
   return client;
 }
 function clientOnData(client,keyPair,callback){
-  client.on('data',function(data){    
-    console.log('client  result:'+data);    
+  client.on('data',function(data){     
     var decrypteds='';
     var rstObj={};  
     try{     
@@ -130,8 +113,6 @@ function isInvalid(msgObj){
 
 function sendMsg(client,msg,serverKeyPair){
   msg = JSON.stringify(msg);
-  var encrypteds = ursaED.encrypt(serverKeyPair,msg, keySizeBits/8);
-  console.log(msg+' 加密后的数据：'+encrypteds);
-  console.log(msg+'\r\n'+encrypteds);
+  var encrypteds = ursaED.encrypt(serverKeyPair,msg, keySizeBits/8);  
   client.write(encrypteds);
 } 
