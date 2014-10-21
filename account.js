@@ -1,5 +1,3 @@
-
-
 var net = require('net');
 var NodeRsa = require('node-rsa');
 var clientPackHandler = require('./clientPackHandler');
