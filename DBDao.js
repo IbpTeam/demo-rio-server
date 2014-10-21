@@ -7,7 +7,7 @@ var options = {
     'host':'127.0.0.1',
     'port': '3306',
     'user': 'root',
-    'password': 'ibp2013OS',
+    'password': 'root',
     'database': 'server',
     'charset': 'utf8',
     'connectionLimit': 32000,

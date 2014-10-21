@@ -1,12 +1,9 @@
 var net = require('net');
 var fs = require('fs');
-var ursa = require('./newUrsa');
-var ursaED = require('./ursaED');
+var rsaKey=require('./rsaKey');
+var NodeRsa=require('node-rsa');
 var DBDao =require('./DBDao');
 var serverRequetHandler =require('./serverRequetHandler');
-//var publicEntity=require('./public');
-var keySizeBits = 1024;
-var size=65537;
 
 var count=0;
 var keyPair;
@@ -18,15 +15,12 @@ function startServer(){
       console.log('server disconntected');
     });
     
-    //var keyPair = ursaED.initSelfRSAKeys('./key/serverPriKey.pem','./key/serverPubKey.pem');
-    //var pubKey = ursaED.getPubKeyPem(keyPair);
-    
     c.on('data',function(data){	  
       console.log('net.js:'+data);
       var decrypteds='';
       var rstObj={};
       try{
-	decrypteds = ursaED.decrypt(keyPair,data.toString('utf-8'), keySizeBits/8);    
+	decrypteds = keyPair.decrypt(data.toString('utf-8'), 'utf8');    
       }catch(err){
 	console.log('error!!!!!');
 	rstObj['msg']='client, you don\'t known my pubKey, you know?!';
@@ -71,8 +65,8 @@ function startServer(){
   server.listen(8894,function(){
     var address = server.address();
     console.log('server bound on %j ',address);
-    keyPair = ursaED.initSelfRSAKeys('./key/serverPriKey.pem','./key/serverPubKey.pem');
-    pubKey = ursaED.getPubKeyPem(keyPair);
+    keyPair = rsaKey.initSelfRSAKeys('./key/serverPriKey.pem','./key/serverPubKey.pem');
+    pubKey = keyPair.getPublicPEM().toString('utf8');
   });
 }
 exports.startServer=startServer;
@@ -80,7 +74,7 @@ exports.startServer=startServer;
 function sendMsg(c,rstObj,msgObj){
   var msg='';
   rstObj['option']=msgObj.option;
-  if(msgObj.data.pubKey==null){
+  if(msgObj.data.pubKey===undefined){
     DBDao.getPubKeyByNameDevice(msgObj.from,msgObj.UUID,function(err,rst){ 
       if(err){
 	rstObj['type']='error';
@@ -89,16 +83,16 @@ function sendMsg(c,rstObj,msgObj){
 	console.log('processSetMsg encrypt:'+msg);
 	//c.write(msg);
       }else{      
-	if(rst.length==0){
+	if(rst.length===0){
 	  rstObj['type']='error';
 	  rstObj['msg']='get your pubKey ERROR: no key on you name and device from sql';
 	  msg = JSON.stringify(rstObj);
 	}else{
-	  var userOnlinePubKey=ursa.createKey(rst[0].pubKey);
+	  var userOnlinePubKey=new NodeRsa(rst[0].pubKey);
 	  //rstObj['option']=msgObj.option;
 	  msg = JSON.stringify(rstObj);
 	  console.log('processSetMsg:'+msg);
-	  msg=ursaED.encrypt(userOnlinePubKey,msg, keySizeBits/8);
+	  msg=userOnlinePubKey.encrypt(msg, 'base64');
 	  console.log('processSetMsg encrypt:'+msg);	
 	  c.write(msg);
 	}
@@ -107,23 +101,23 @@ function sendMsg(c,rstObj,msgObj){
       }
     });
   }else{
-    var userOnlinePubKey=ursa.createKey(msgObj.data.pubKey);	  
+    var userOnlinePubKey=new NodeRsa(msgObj.data.pubKey);	  
     //rstObj['option']=msgObj.option;	  
     msg = JSON.stringify(rstObj);	 
     console.log('processSetMsg:'+msg);	  
-    msg=ursaED.encrypt(userOnlinePubKey,msg, keySizeBits/8);
+    msg=userOnlinePubKey.encrypt(msg,'base64');
     console.log('processSetMsg encrypt:'+msg);
     c.write(msg);
   }
 }
 function isInvalid(msgObj){
-  if(msgObj.type==null||msgObj.option==null){
+  if(msgObj.type===undefined||msgObj.option===undefined){
     console.log('invalid true');
     return true;
   }else{
     switch(msgObj.type){
       case 'set':{
-	if(msgObj.from==null||msgObj.UUID==null){
+	if(msgObj.from===undefined||msgObj.UUID===undefined){
 	  console.log('invalid true');
 	  return true;
 	}else{

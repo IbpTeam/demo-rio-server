@@ -1,16 +1,14 @@
 var net = require('net');
-var ursa = require('./newUrsa');
-var ursaED = require('./ursaED');
+var NodeRsa = require('node-rsa');
 var clientPackHandler = require('./clientPackHandler');
 
-var PORT=8893;
-var IP='127.0.0.1';//'192.168.160.66';
-var keySizeBits = 1024;
+var PORT=8894;
+var IP='192.168.160.66';
 var TIMEOUT=10000;
 
 function register(userName,password,UUID,pubKey,keyPair,serverKeyPair,rigisterResultCb){
   var client = connectClient();
-  clientPackHandler.register(userName,password,UUID,pubKey,function(msg){
+  clientPackHandler.register(userName,password,UUID,pubKey,function(msg){ 
     sendMsg(client,msg,serverKeyPair);
   });
   clientOnData(client,keyPair,rigisterResultCb);
@@ -55,7 +53,7 @@ function clientOnData(client,keyPair,callback){
     var decrypteds='';
     var rstObj={};  
     try{     
-      decrypteds = ursaED.decrypt(keyPair,data.toString('utf-8'), keySizeBits/8);
+      decrypteds = keyPair.decrypt(data.toString('utf-8'), 'utf8');
     }catch(err){     
       console.log('getPubKeysByName error!!');
       console.log('server, you don\'t known my pubKey, you know?!');
@@ -73,10 +71,7 @@ function clientOnData(client,keyPair,callback){
 	client.end();
       }
   });
-}
-function timeOut(callback){
- callback(null); 
-}
+} 
 function clientOnEndOrError(client){
   client.on('end',function(){
     console.log('client disconnected');
@@ -88,13 +83,13 @@ function clientOnEndOrError(client){
 }
 
 function isInvalid(msgObj){
-  if(msgObj.type==null||msgObj.option==null){
+  if(msgObj.type===undefined||msgObj.option===undefined){
     console.log('invalid true');
     return true;
   }else{
     switch(msgObj.type){
       case 'set':{
-	if(msgObj.from==null||msgObj.UUID==null){
+	if(msgObj.from===undefined||msgObj.UUID===undefined){
 	  console.log('invalid true');
 	  return true;
 	}else{
@@ -112,7 +107,7 @@ function isInvalid(msgObj){
 }
 
 function sendMsg(client,msg,serverKeyPair){
-  msg = JSON.stringify(msg);
-  var encrypteds = ursaED.encrypt(serverKeyPair,msg, keySizeBits/8);  
+  msg = JSON.stringify(msg); 
+  var encrypteds = serverKeyPair.encrypt(msg, 'base64');  
   client.write(encrypteds);
 } 

@@ -1,10 +1,7 @@
 var net = require('net');
 var fs = require('fs');
-var ursa = require('./newUrsa');
-var ursaED = require('./ursaED');
 var crypto = require('crypto');
 
-var keySizeBits = 1024;
 
 function MD5(str, encoding){
   return crypto.createHash('md5').update(str).digest(encoding || 'hex');
@@ -24,7 +21,7 @@ function register(userName,password,UUID,pubKey,rigisterCallback){
   data['userName']=userName;
   data['password']=MD5(password);
   data['UUID']='Linux CDOS';
-  data['pubKey']=pubKey.toString('utf-8');
+  data['pubKey']=pubKey;
   data['desc']='';
   msg['data']=data;
   msg['msg']='register';
@@ -40,7 +37,7 @@ function login(userName,password,UUID,pubKey,loginCallback){
   msg['option']=0x0001;
   data['userName']=userName;
   data['password']=MD5(password);
-  data['pubKey']=pubKey.toString('utf-8');
+  data['pubKey']=pubKey;
   data['desc']='';
   msg['data']=data;
   msg['msg']='login'; 

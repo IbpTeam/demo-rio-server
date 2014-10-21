@@ -1,26 +1,23 @@
-var ursaED = require('./ursaED');
+var rsaKey = require('./rsaKey');
+var NodeRsa=require('node-rsa');
 var account = require('./account');
 //var keySizeBits = 1024;
-var keyPair = ursaED.initSelfRSAKeys('./key/priKey.pem','./key/pubKey.pem');
+var keyPair = rsaKey.initSelfRSAKeys('./key/priKey.pem','./key/pubKey.pem');
 
-var pubKey=ursaED.getPubKeyPem(keyPair);
+var pubKey=keyPair.getPublicPEM().toString('utf8');
 
-var serverKeyPair= ursaED.loadServerKey('./key/serverKey.pem');
+var serverKeyPair= rsaKey.loadServerKey('./key/serverKey.pem');
 
-console.log(pubKey);
-/*
+console.log(pubKey); /*
 account.register('fang','fyf','Linux Mint',pubKey,keyPair,serverKeyPair,function(msg){
   console.log(JSON.stringify(msg));
 });
 */
-for(var i=0;i<500;i++){
-
-console.log(i+':-------------------------------------')/*
-account.login('fyf','fyf','Linux Ubuntu',pubKey,keyPair,serverKeyPair,function(msg){
-  console.log(JSON.stringify(msg));
-});*/
-account.getPubKeysByName('fyf','Linux CDOS','fyf',keyPair,serverKeyPair,function(msg){
+account.getPubKeysByName('fang','Linux Mint','fang',keyPair,serverKeyPair,function(msg){
     console.log(JSON.stringify(msg));
 });
-console.log('--------------------------')
-}
+account.login('fang','fyf','Linux Mint',pubKey,keyPair,serverKeyPair,function(msg){
+  console.log(JSON.stringify(msg));
+});
+
+

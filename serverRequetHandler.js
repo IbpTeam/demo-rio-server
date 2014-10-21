@@ -1,5 +1,4 @@
 var DBDao=require('./DBDao');
-var ursa = require('./newUrsa');
 
 exports.processGetMsg=function(rstObj,msgObj,processGetMsgCallback){
   var dataObj=msgObj.data;
@@ -14,7 +13,7 @@ exports.processGetMsg=function(rstObj,msgObj,processGetMsgCallback){
 	  processGetMsgCallback(rstObj);		  
 	}else{ 	
 	  rstObj['type']='result';
-	  if(rstPubKey.length==0){	              
+	  if(rstPubKey.length===0){	              
 	    rstObj['state']=0;	  
 	    rstObj['msg']='no such a person';	      
 	    processGetMsgCallback(rstObj);	    	  
@@ -61,7 +60,6 @@ exports.processGetMsg=function(rstObj,msgObj,processGetMsgCallback){
 }
 exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
   var dataObj=msgObj.data;
-  //var keyPair=ursa.createKey(dataObj.pubKey);
   switch(msgObj.option){			  
     case 0x0001: {				//登录	  				  
       DBDao.authUser(dataObj.userName,dataObj.password,function(err,rst){
@@ -71,7 +69,7 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
 	  rstObj['msg']=rst;
 	  processSetMsgCallback(rstObj);
 	}else{ 
-	  if(rst.length==0){					      
+	  if(rst.length===0){					      
 	    console.log('none');	
 	    rstObj['type']='result';	
 	    rstObj['state']=0;	
@@ -85,8 +83,8 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
 		rstObj['msg']=rst;
 		processSetMsgCallback(rstObj);
 	      }else{
-		if(rst.length==0){
-		  if(dataObj.pubKey==null){
+		if(rst.length===0){
+		  if(dataObj.pubKey===undefined){
 		    rstObj['type']='error';	         
 		    rstObj['msg']='no new pubKey provided!';
 		    processSetMsgCallback(rstObj);
@@ -110,7 +108,7 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
 		      processSetMsgCallback(rstObj);
 		    });
 		}else{ 
-		  if(dataObj.pubKey==null||dataObj.pubKey==rst[0].pubKey){
+		  if(dataObj.pubKey===undefined||dataObj.pubKey===rst[0].pubKey){
 		    rstObj['type']='result';			  
 		    rstObj['state']=1;			  
 		    rstObj['msg']='auth succeed';
@@ -148,7 +146,7 @@ exports.processSetMsg=function(rstObj,msgObj,processSetMsgCallback){
 	  rstObj['msg']=rst;
 	  processSetMsgCallback(rstObj);
 	}else{	  	
-	  if(rst.length==0){				   	  
+	  if(rst.length===0){				   	  
 	    console.log('none');				       	  
 	    DBDao.saveUser(dataObj,function(err,rst){					 
 	      console.log('saveUser');						 
